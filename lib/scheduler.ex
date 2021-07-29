@@ -7,63 +7,40 @@ defmodule Scheduler do
   alias Scheduler.Supervision.WorkerSupervisor
   import ShorterMaps
 
-  def add_job(name, at_time, time_zone)
-      when is_binary(name) and is_struct(at_time, Time) and is_binary(time_zone) do
-    params = %{name: name, at_time: at_time, time_zone: time_zone}
-
+  def add_job(%{name: _, at_time: _, time_zone: _} = params) do
     with {:ok, job} <- Schedule.create_job(params),
          {:ok, _pid} <- WorkerSupervisor.start_worker(job) do
-      {:ok, "#{name} created!"}
+      {:ok, "Job created"}
     end
   end
 
-  def remove_job(name) when is_binary(name) do
+  def remove_job(%{name: name}) do
     with {1, nil} <- Schedule.delete_job(name),
-         :ok <- WorkerSupervisor.stop_worker(%{name: name}) do
-      {:ok, "#{name} has been removed from Schedule and SupervisionTree"}
+         {:ok, _} <- WorkerSupervisor.stop_worker(%{name: name}) do
+      {:ok, "Job removed"}
     end
   end
 
-  def update_job(name, at_time, time_zone) do
+  def update_job(%{name: name, at_time: _, time_zone: _} = params) do
     WorkerSupervisor.stop_worker(%{name: name})
-    job = Schedule.get_job(name)
-    params = ~M{name, at_time, time_zone}
 
-    with {:ok, updated_job} <- Schedule.update_job(job, params),
+    with {:ok, updated_job} <- Schedule.update_job_by_name(name, params),
          {:ok, _pid} <- WorkerSupervisor.start_worker(updated_job) do
-      {:ok, "#{updated_job.name} has been updated!"}
+      {:ok, "Job updated"}
     end
   end
 
-  def activate_job(name) do
-    job = Schedule.get_job(name)
-
-    case {job, job && job.activated} do
-      {nil, _} ->
-        {:error, :not_found}
-
-      {_, true} ->
-        {:info, "#{name} had already been activated!"}
-
-      _hasnt_activated ->
-        Schedule.update_job(job, %{activated: true})
-        WorkerSupervisor.start_worker(job)
+  def activate_job(%{name: name}) do
+    with {:ok, updated_job} <- Schedule.update_job_by_name(name, %{activated: true}),
+         {:ok, _pid} <- WorkerSupervisor.start_worker(updated_job) do
+      {:ok, "Job activated"}
     end
   end
 
-  def deactivate_job(name) do
-    job = Schedule.get_job(name)
-
-    case {job, job && job.activated} do
-      {nil, _} ->
-        {:error, :not_found}
-
-      {_, false} ->
-        {:info, "#{name} had already been deactivated!"}
-
-      _activated ->
-        Schedule.update_job(job, %{activated: false})
-        WorkerSupervisor.stop_worker(job)
+  def deactivate_job(%{name: name}) do
+    with {:ok, updated_job} <- Schedule.update_job_by_name(name, %{activated: false}),
+         {:ok, _} <- WorkerSupervisor.stop_worker(updated_job) do
+      {:ok, "Job deactivated"}
     end
   end
 
@@ -74,7 +51,7 @@ defmodule Scheduler do
   """
   def do_some_job(~M{name, at_time, time_zone}) do
     IO.puts("#{Timex.now(time_zone)}: Starting #{name} - #{at_time}")
-    duration = 5000
+    duration = 15000
     :timer.sleep(duration)
 
     File.write!("tmp/job_log.txt", "#{Timex.now(time_zone)}: DONE #{name} - #{at_time}\r\n", [

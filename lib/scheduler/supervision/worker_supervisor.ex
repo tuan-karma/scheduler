@@ -7,16 +7,22 @@ defmodule Scheduler.Supervision.WorkerSupervisor do
     DynamicSupervisor.start_link(__MODULE__, init_arg, name: __MODULE__)
   end
 
-  def start_worker(%{name: name} = attrs) do
-    IO.puts("Worker for #{name} is starting.")
-
+  def start_worker(%{activated: true} = attrs) do
     DynamicSupervisor.start_child(__MODULE__, {Worker, attrs})
-    |> IO.inspect(label: "AT DynamicSup.start_worker")
+  end
+
+  def start_worker(%{activated: false}) do
+    {:ok, nil}
   end
 
   def stop_worker(%{name: name}) when is_binary(name) do
-    [{pid, _}] = Registry.lookup(WorkerRegistry, name)
-    GenServer.stop(pid)
+    case Registry.lookup(WorkerRegistry, name) do
+      [{pid, _}] ->
+        {:ok, GenServer.stop(pid)}
+
+      [] ->
+        {:ok, nil}
+    end
   end
 
   ## Callbacks

@@ -4,7 +4,6 @@ defmodule Scheduler.Schedule.Job do
 
   schema "jobs" do
     field(:name, :string)
-    field(:interval, :integer)
     field(:at_time, :time)
     field(:time_zone, :string)
     field(:activated, :boolean, default: true)
@@ -12,7 +11,7 @@ defmodule Scheduler.Schedule.Job do
 
   def changeset(schedule, attrs) do
     schedule
-    |> cast(attrs, [:name, :interval, :at_time, :time_zone, :activated])
+    |> cast(attrs, [:name, :at_time, :time_zone, :activated])
     |> validate_required([:name, :at_time, :time_zone])
     |> unique_constraint(:name)
   end

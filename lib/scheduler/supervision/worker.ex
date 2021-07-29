@@ -9,13 +9,8 @@ defmodule Scheduler.Supervision.Worker do
 
   @impl true
   def init(params) do
-    case schedule_job(params) do
-      {:noreply, _} ->
-        {:ok, params}
-
-      {:stop, _, _} ->
-        :ignore
-    end
+    schedule_job(params)
+    {:ok, params}
   end
 
   @impl true
@@ -27,13 +22,6 @@ defmodule Scheduler.Supervision.Worker do
     end
 
     schedule_job(params)
-  end
-
-  @impl true
-  def terminate(reason, state) do
-    IO.inspect("@terminate/2 callback")
-    IO.inspect({:reason, reason})
-    IO.inspect({:state, state})
   end
 
   defp process_name(name) when is_binary(name) do
@@ -52,10 +40,8 @@ defmodule Scheduler.Supervision.Worker do
 
     if interval > 0 do
       interval
-      |> IO.inspect(label: "interval > 0")
     else
-      (24 * 60 * 60 * 1000 + interval)
-      |> IO.inspect(label: "interval <= 0")
+      24 * 60 * 60 * 1000 + interval
     end
   end
 end

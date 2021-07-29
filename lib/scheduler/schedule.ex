@@ -32,6 +32,16 @@ defmodule Scheduler.Schedule do
     |> Repo.update()
   end
 
+  def update_job_by_name(name, attrs) when is_binary(name) do
+    case get_job(name) do
+      nil ->
+        {:error, :not_found}
+
+      job ->
+        update_job(job, attrs)
+    end
+  end
+
   def delete_job(%Job{} = job) do
     Repo.delete(job)
   end
@@ -40,5 +50,18 @@ defmodule Scheduler.Schedule do
     Job
     |> where([j], j.name == ^name)
     |> Repo.delete_all()
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking job changes.
+
+  ## Examples
+
+      iex> change_job(params)
+      %Ecto.Changeset{data: %Job{}}
+
+  """
+  def change_job(%Job{} = job, attrs \\ %{}) do
+    Job.changeset(job, attrs)
   end
 end

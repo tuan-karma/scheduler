@@ -1,6 +1,6 @@
 defmodule Scheduler.Supervision.WorkersStarter do
   @moduledoc """
-  Start all "jobs" stored in database at and only at the application starting-up/restart.
+  Start all "jobs" stored in database at_and_only_at the application starting-up/restart.
   """
   use GenServer, restart: :temporary
   alias Scheduler.Schedule
