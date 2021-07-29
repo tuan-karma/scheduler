@@ -18,7 +18,7 @@ defmodule Scheduler.Supervision.Worker do
     time_zone = Map.get(params, :time_zone)
 
     if Calendar.business_day?(time_zone) do
-      Scheduler.do_some_job(params)
+      Scheduler.do_the_job(params)
     end
 
     schedule_job(params)
@@ -41,6 +41,7 @@ defmodule Scheduler.Supervision.Worker do
     if interval > 0 do
       interval
     else
+      # next day:
       24 * 60 * 60 * 1000 + interval
     end
   end

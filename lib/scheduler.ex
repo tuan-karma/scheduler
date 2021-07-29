@@ -53,12 +53,18 @@ defmodule Scheduler do
     end
   end
 
+  @doc """
+  This is a API function to dispatch job needed to do based on params (aka. name of the job).
+  A call to external service can be done from this function.
+  """
+  def do_the_job(params) do
+    do_some_job(params)
+  end
+
   ## Helper functions:
 
-  @doc """
-  This function is for functional test purpose.
-  """
-  def do_some_job(~M{name, at_time, time_zone}) do
+  ## The following function is for functional test purpose.
+  defp do_some_job(~M{name, at_time, time_zone}) do
     IO.puts("#{Timex.now(time_zone)}: Starting #{name} - #{at_time}")
     duration = 15000
     :timer.sleep(duration)
