@@ -7,6 +7,15 @@ defmodule Scheduler do
   alias Scheduler.Supervision.WorkerSupervisor
   import ShorterMaps
 
+  @doc """
+  Add a job to database and start a worker in supervision tree to do that job at the time.
+
+  ## Examples
+
+      iex> Scheduler.add_job(%{name: "job1", at_time: ~T[11:25:32], time_zone: "Asia/Ho_Chi_Minh"})
+      {:ok, "Job created"}
+
+  """
   def add_job(%{name: _, at_time: _, time_zone: _} = params) do
     with {:ok, job} <- Schedule.create_job(params),
          {:ok, _pid} <- WorkerSupervisor.start_worker(job) do
